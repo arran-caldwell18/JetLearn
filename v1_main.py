@@ -13,7 +13,11 @@ from scipy.sparse import triu
 from gensim.models import Word2Vec
 from scipy import spatial
 import networkx as nx
+import os
 
+
+#CONST
+IMAGE_DIR = r"C:\Users\arran\OneDrive\Desktop\Jet Learn Milestone prodject\MileStone Prodject 2\subject.png"
 
 #Download Stop words
 nltk.download('punkt_tab')
@@ -21,7 +25,7 @@ nltk.download('stopwords')
 
 
 #Load Image
-image = cv2.imread("subject.png")
+image = cv2.imread(IMAGE_DIR)
 
 
 #Load Reader 
@@ -33,7 +37,7 @@ result = reader.readtext(image)
 #Loop over Result to get text
 whole_text = ""
 for i in result:
-    whole_text = whole_text + i[1].lower()
+    whole_text += i[1].lower() + " "
 
 #Tokenize words
 sentences = sent_tokenize(whole_text)
@@ -43,7 +47,7 @@ sentences_clean = [re.sub(r'[^\w\s]', '' , sentence.lower()) for sentence in sen
 
 #Remove Stop Words
 stop_words = stopwords.words("english")
-sentence_tokens = [[word for word in sentence.split(' ') if word not in stop_words] for sentence in sentences_clean]
+sentence_tokens = [[word for word in sentence.split() if word not in stop_words] for sentence in sentences]
 
 #Embedding
 word_2_vec = Word2Vec(sentence_tokens , vector_size=1, min_count=1 , epochs=1000)
@@ -52,7 +56,7 @@ sentence_embeddings = [[word_2_vec.wv[word][0] for word in words] for words in s
 
 max_len = max([len(tokens) for tokens in sentence_tokens])
 
-sentence_embeddings = [np.pad(embedding , (0 , max_len - len(embedding)) , 'constant') for embedding in sentence_tokens]
+sentence_embeddings = [np.pad(embedding , (0 , max_len - len(embedding)) , 'constant') for embedding in sentence_embeddings]
 
 #Similarity Matrix
 similarity_matrix = np.zeros([len(sentence_tokens) , len(sentence_tokens)])
@@ -74,6 +78,9 @@ top_sentence = {scentence:scores [index] for index , scentence in enumerate(sent
 
 #Sort ranking
 top = dict(sorted(top_sentence.items() , key = lambda x : x[1], reverse=True) [:4])
+
+#Clear terminal before printing -> rid wierd loading messages
+os.system('cls' if os.name == 'nt' else 'clear')
 
 #Print top ranked scentences[in order]
 for i in sentences:
